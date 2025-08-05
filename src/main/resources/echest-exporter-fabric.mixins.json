@@ -3,7 +3,7 @@
 	"package": "dev.cypphi.eef.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"ExampleMixin"
+		"EnderChestScreenMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
