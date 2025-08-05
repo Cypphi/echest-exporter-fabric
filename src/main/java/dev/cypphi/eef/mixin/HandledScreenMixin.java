@@ -3,6 +3,7 @@ package dev.cypphi.eef.mixin;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import net.minecraft.client.MinecraftClient;
@@ -13,6 +14,9 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.Text;
+import net.minecraft.nbt.*;
+import com.mojang.serialization.JsonOps;
+import com.mojang.serialization.DataResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Shadow;
@@ -79,15 +83,25 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
                                 String id = net.minecraft.registry.Registries.ITEM.getId(stack.getItem()).toString();
                                 itemObj.addProperty("id", id);
                                 itemObj.addProperty("count", stack.getCount());
+                                DataResult<NbtElement> result = ItemStack.CODEC.encodeStart(NbtOps.INSTANCE, stack);
+                                result.result().ifPresent(nbt -> {
+                                        // Remove duplicate id/count if present
+                                        if (nbt instanceof NbtCompound compound) {
+                                                compound.remove("id");
+                                                compound.remove("count");
+                                        }
+                                        JsonElement nbtJson = NbtOps.INSTANCE.convertTo(JsonOps.INSTANCE, nbt);
+                                        itemObj.add("nbt", nbtJson);
+                                });
                                 slotObj.add("item", itemObj);
                         } else {
                                 slotObj.add("item", JsonNull.INSTANCE);
                         }
                         items.add(slotObj);
                 }
-		JsonObject root = new JsonObject();
-		root.add("items", items);
-		root.addProperty("username", client.getSession().getUsername());
+                JsonObject root = new JsonObject();
+                root.add("items", items);
+                root.addProperty("username", client.getSession().getUsername());
 
                 String home = System.getProperty("user.home");
                 String filename = client.getSession().getUsername() + "_enderchest.json";
@@ -104,4 +118,5 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
                         EchestExporterFabric.LOGGER.error("Failed to export ender chest", e);
                 }
         }
+
 }
