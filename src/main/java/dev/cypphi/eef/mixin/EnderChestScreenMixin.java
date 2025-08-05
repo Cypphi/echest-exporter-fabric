@@ -15,7 +15,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.inventory.EnderChestInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtOps;
@@ -51,25 +50,34 @@ public abstract class EnderChestScreenMixin<T extends ScreenHandler> extends Scr
                 super(title);
         }
 
+        @Unique
+        private static final Text ENDER_CHEST_TITLE = Text.translatable("container.enderchest");
+
         @Inject(method = "init", at = @At("TAIL"))
         private void addExportButton(CallbackInfo ci) {
+                EchestExporterFabric.LOGGER.debug("HandledScreen init for {}", this.getTitle().getString());
                 if ((Object) this instanceof GenericContainerScreen) {
-                        Inventory inv = ((GenericContainerScreenHandler) this.handler).getInventory();
                         MinecraftClient client = MinecraftClient.getInstance();
-                        if (client.player != null && inv instanceof EnderChestInventory) {
+                        Inventory inv = ((GenericContainerScreenHandler) this.handler).getInventory();
+                        EchestExporterFabric.LOGGER.debug("Container inventory: {}", inv.getClass().getName());
+                        if (client.player != null && ENDER_CHEST_TITLE.equals(this.getTitle())) {
+                                EchestExporterFabric.LOGGER.debug("Adding export button for ender chest");
                                 ButtonWidget button = ButtonWidget.builder(Text.literal("Export"), b -> exportEnderChest())
                                                 .dimensions(0, 0, 56, 20)
                                                 .build();
                                 this.addDrawableChild(button);
+                        } else {
+                                EchestExporterFabric.LOGGER.debug("Not an ender chest screen: player={}, title={}", client.player, this.getTitle().getString());
                         }
                 }
         }
 
 	@Unique
 	private void exportEnderChest() {
-		MinecraftClient client = MinecraftClient.getInstance();
-		if (client.player == null) return;
-		EnderChestInventory inv = client.player.getEnderChestInventory();
+                MinecraftClient client = MinecraftClient.getInstance();
+                if (client.player == null) return;
+                EchestExporterFabric.LOGGER.debug("Exporting ender chest for {}", client.getSession().getUsername());
+                var inv = client.player.getEnderChestInventory();
 
 		JsonArray items = new JsonArray();
         assert client.world != null;
@@ -91,8 +99,10 @@ public abstract class EnderChestScreenMixin<T extends ScreenHandler> extends Scr
 		root.add("items", items);
 		root.addProperty("username", client.getSession().getUsername());
 
-		String home = System.getProperty("user.home");
-		Path path = Paths.get(home, "Documents", "enderchest.json");
+                String home = System.getProperty("user.home");
+                String filename = client.getSession().getUsername() + "_enderchest.json";
+                Path path = Paths.get(home, "Documents", filename);
+                EchestExporterFabric.LOGGER.debug("Saving ender chest to {}", path);
 		try {
 			Files.createDirectories(path.getParent());
 			try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
