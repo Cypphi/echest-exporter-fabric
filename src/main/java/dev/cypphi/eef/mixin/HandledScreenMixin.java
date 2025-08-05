@@ -12,7 +12,6 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.inventory.EnderChestInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,13 +32,13 @@ import java.nio.file.StandardOpenOption;
 import dev.cypphi.eef.EchestExporterFabric;
 
 @Mixin(HandledScreen.class)
-public abstract class EnderChestScreenMixin<T extends ScreenHandler> extends Screen {
+public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen {
         @Shadow @Final protected T handler;
         @Shadow protected int x;
         @Shadow protected int y;
         @Shadow protected int backgroundWidth;
 
-        protected EnderChestScreenMixin(Text title) {
+        protected HandledScreenMixin(Text title) {
                 super(title);
         }
 
