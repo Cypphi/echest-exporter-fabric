@@ -10,7 +10,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.inventory.EnderChestInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.Text;
@@ -67,11 +66,12 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
                 MinecraftClient client = MinecraftClient.getInstance();
                 if (client.player == null) return;
                 EchestExporterFabric.LOGGER.debug("Exporting ender chest for {}", client.getSession().getUsername());
-                EnderChestInventory inv = client.player.getEnderChestInventory();
-
                 JsonArray items = new JsonArray();
-                for (int i = 0; i < inv.size(); i++) {
-                        ItemStack stack = inv.getStack(i);
+
+                // The handler contains both the ender chest inventory and the player's
+                // inventory. The first 27 slots correspond to the ender chest.
+                for (int i = 0; i < 27; i++) {
+                        ItemStack stack = handler.getSlot(i).getStack();
                         JsonObject slotObj = new JsonObject();
                         slotObj.addProperty("slot", i);
                         if (!stack.isEmpty()) {
@@ -93,15 +93,15 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
                 String filename = client.getSession().getUsername() + "_enderchest.json";
                 Path path = Paths.get(home, "Documents", filename);
                 EchestExporterFabric.LOGGER.debug("Saving ender chest to {}", path);
-		try {
-			Files.createDirectories(path.getParent());
-			try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-				Gson gson = new GsonBuilder().setPrettyPrinting().create();
-				gson.toJson(root, writer);
-			}
-			EchestExporterFabric.LOGGER.info("Ender chest exported to {}", path);
-		} catch (IOException e) {
-			EchestExporterFabric.LOGGER.error("Failed to export ender chest", e);
-		}
-	}
+                try {
+                        Files.createDirectories(path.getParent());
+                        try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+                                Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
+                                gson.toJson(root, writer);
+                        }
+                        EchestExporterFabric.LOGGER.info("Ender chest exported to {}", path);
+                } catch (IOException e) {
+                        EchestExporterFabric.LOGGER.error("Failed to export ender chest", e);
+                }
+        }
 }
