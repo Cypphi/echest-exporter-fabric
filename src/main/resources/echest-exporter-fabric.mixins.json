@@ -4,7 +4,7 @@
         "compatibilityLevel": "JAVA_21",
         "refmap": "echest-exporter-fabric.refmap.json",
         "mixins": [
-                "EnderChestScreenMixin"
+			"HandledScreenMixin"
         ],
 	"injectors": {
 		"defaultRequire": 1
