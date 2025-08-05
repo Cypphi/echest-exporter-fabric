@@ -15,8 +15,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.Text;
 import net.minecraft.nbt.*;
+import net.minecraft.registry.RegistryWrapper;
 import com.mojang.serialization.JsonOps;
-import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Shadow;
@@ -82,18 +83,25 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
                                 JsonObject itemObj = new JsonObject();
                                 String id = net.minecraft.registry.Registries.ITEM.getId(stack.getItem()).toString();
                                 itemObj.addProperty("id", id);
-                                itemObj.addProperty("count", stack.getCount());
-                                DataResult<NbtElement> result = ItemStack.CODEC.encodeStart(NbtOps.INSTANCE, stack);
-                                result.result().ifPresent(nbt -> {
-                                        // Remove duplicate id/count if present
-                                        if (nbt instanceof NbtCompound compound) {
-                                                compound.remove("id");
-                                                compound.remove("count");
-                                        }
-                                        JsonElement nbtJson = NbtOps.INSTANCE.convertTo(JsonOps.INSTANCE, nbt);
-                                        itemObj.add("nbt", nbtJson);
-                                });
-                                slotObj.add("item", itemObj);
+                               itemObj.addProperty("count", stack.getCount());
+                               // Encode the stack using registry-aware ops so all existing
+                               // NBT data (like shulker contents) is preserved.
+                               if (client.world != null) {
+                                       RegistryWrapper.WrapperLookup lookup = client.world.getRegistryManager();
+                                       DynamicOps<NbtElement> nbtOps = lookup.getOps(NbtOps.INSTANCE);
+                                       DynamicOps<JsonElement> jsonOps = lookup.getOps(JsonOps.INSTANCE);
+                                       ItemStack.CODEC.encodeStart(nbtOps, stack).result().ifPresent(nbt -> {
+                                               if (nbt instanceof NbtCompound compound) {
+                                                       compound.remove("id");
+                                                       compound.remove("count");
+                                                       if (!compound.isEmpty()) {
+                                                               JsonElement nbtJson = nbtOps.convertTo(jsonOps, compound);
+                                                               itemObj.add("nbt", nbtJson);
+                                                       }
+                                               }
+                                       });
+                               }
+                               slotObj.add("item", itemObj);
                         } else {
                                 slotObj.add("item", JsonNull.INSTANCE);
                         }
