@@ -77,24 +77,30 @@ public abstract class EnderChestScreenMixin<T extends ScreenHandler> extends Scr
                 MinecraftClient client = MinecraftClient.getInstance();
                 if (client.player == null) return;
                 EchestExporterFabric.LOGGER.debug("Exporting ender chest for {}", client.getSession().getUsername());
-                var inv = client.player.getEnderChestInventory();
+                Inventory inv = ((GenericContainerScreenHandler) this.handler).getInventory();
 
-		JsonArray items = new JsonArray();
-        assert client.world != null;
-        RegistryWrapper.WrapperLookup lookup = client.world.getRegistryManager();
-		var ops = RegistryOps.of(NbtOps.INSTANCE, lookup);
-		for (int i = 0; i < inv.size(); i++) {
-			ItemStack stack = inv.getStack(i);
-			if (!stack.isEmpty()) {
-				DataResult<NbtElement> result = ItemStack.CODEC.encodeStart(ops, stack);
-				result.result().ifPresentOrElse(el -> {
-					JsonElement json = (JsonElement) NbtOps.INSTANCE.convertTo(JsonOps.INSTANCE, el);
-					items.add(json);
-				}, () -> EchestExporterFabric.LOGGER.error("Failed to encode stack {}", stack));
-			} else {
-				items.add(JsonNull.INSTANCE);
-			}
-		}
+                JsonArray items = new JsonArray();
+                assert client.world != null;
+                RegistryWrapper.WrapperLookup lookup = client.world.getRegistryManager();
+                var ops = RegistryOps.of(NbtOps.INSTANCE, lookup);
+                for (int i = 0; i < inv.size(); i++) {
+                        ItemStack stack = inv.getStack(i);
+                        JsonObject slotObj = new JsonObject();
+                        slotObj.addProperty("slot", i);
+                        if (!stack.isEmpty()) {
+                                DataResult<NbtElement> result = ItemStack.CODEC.encodeStart(ops, stack);
+                                result.result().ifPresentOrElse(el -> {
+                                        JsonElement json = (JsonElement) NbtOps.INSTANCE.convertTo(JsonOps.INSTANCE, el);
+                                        slotObj.add("item", json);
+                                }, () -> {
+                                        EchestExporterFabric.LOGGER.error("Failed to encode stack {}", stack);
+                                        slotObj.add("item", JsonNull.INSTANCE);
+                                });
+                        } else {
+                                slotObj.add("item", JsonNull.INSTANCE);
+                        }
+                        items.add(slotObj);
+                }
 		JsonObject root = new JsonObject();
 		root.add("items", items);
 		root.addProperty("username", client.getSession().getUsername());
