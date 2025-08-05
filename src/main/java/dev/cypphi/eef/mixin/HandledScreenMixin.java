@@ -51,17 +51,13 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
 
         @Inject(method = "init", at = @At("TAIL"))
         private void addExportButton(CallbackInfo ci) {
-                EchestExporterFabric.LOGGER.debug("HandledScreen init for {}", this.getTitle().getString());
                 if ((Object) this instanceof GenericContainerScreen) {
                         MinecraftClient client = MinecraftClient.getInstance();
                         if (client.player != null && ENDER_CHEST_TITLE.equals(this.getTitle())) {
-                                EchestExporterFabric.LOGGER.debug("Adding export button for ender chest");
                                 ButtonWidget button = ButtonWidget.builder(Text.literal("Export"), b -> exportEnderChest())
                                                 .dimensions(0, 0, 56, 20)
                                                 .build();
                                 this.addDrawableChild(button);
-                        } else {
-                                EchestExporterFabric.LOGGER.debug("Not an ender chest screen: player={}, title={}", client.player, this.getTitle().getString());
                         }
                 }
         }
@@ -70,7 +66,6 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
         private void exportEnderChest() {
                 MinecraftClient client = MinecraftClient.getInstance();
                 if (client.player == null) return;
-                EchestExporterFabric.LOGGER.debug("Exporting ender chest for {}", client.getSession().getUsername());
                 JsonArray items = new JsonArray();
 
                 // The handler contains both the ender chest inventory and the player's
@@ -82,8 +77,9 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
                         if (!stack.isEmpty()) {
                                 JsonObject itemObj = new JsonObject();
                                 String id = net.minecraft.registry.Registries.ITEM.getId(stack.getItem()).toString();
+                                if (id.startsWith("minecraft:")) id = id.substring("minecraft:".length());
                                 itemObj.addProperty("id", id);
-                               itemObj.addProperty("count", stack.getCount());
+                                itemObj.addProperty("count", stack.getCount());
                                // Encode the stack using registry-aware ops so all existing
                                // NBT data (like shulker contents) is preserved.
                                if (client.world != null) {
@@ -114,14 +110,12 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
                 String home = System.getProperty("user.home");
                 String filename = client.getSession().getUsername() + "_enderchest.json";
                 Path path = Paths.get(home, "Documents", filename);
-                EchestExporterFabric.LOGGER.debug("Saving ender chest to {}", path);
                 try {
                         Files.createDirectories(path.getParent());
                         try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
                                 Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
                                 gson.toJson(root, writer);
                         }
-                        EchestExporterFabric.LOGGER.info("Ender chest exported to {}", path);
                 } catch (IOException e) {
                         EchestExporterFabric.LOGGER.error("Failed to export ender chest", e);
                 }
