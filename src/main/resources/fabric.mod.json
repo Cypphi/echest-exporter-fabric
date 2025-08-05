@@ -15,7 +15,7 @@
 	"icon": "assets/echest-exporter-fabric/icon.png",
 	"environment": "*",
 	"entrypoints": {
-		"main": [
+		"client": [
 			"dev.cypphi.eef.EchestExporterFabric"
 		]
 	},
