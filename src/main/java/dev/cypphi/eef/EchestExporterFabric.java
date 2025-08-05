@@ -1,7 +1,6 @@
 package dev.cypphi.eef;
 
 import net.fabricmc.api.ClientModInitializer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
