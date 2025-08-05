@@ -40,9 +40,6 @@ import dev.cypphi.eef.EchestExporterFabric;
 @Mixin(HandledScreen.class)
 public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen {
     @Shadow @Final protected T handler;
-    @Shadow protected int x;
-    @Shadow protected int y;
-    @Shadow protected int backgroundWidth;
 
     protected HandledScreenMixin(Text title) {
         super(title);
