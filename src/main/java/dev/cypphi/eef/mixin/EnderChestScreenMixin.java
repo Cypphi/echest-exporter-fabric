@@ -56,9 +56,9 @@ public abstract class EnderChestScreenMixin<T extends ScreenHandler> extends Scr
                 if ((Object) this instanceof GenericContainerScreen) {
                         Inventory inv = ((GenericContainerScreenHandler) this.handler).getInventory();
                         MinecraftClient client = MinecraftClient.getInstance();
-                        if (client.player != null && inv == client.player.getEnderChestInventory()) {
+                        if (client.player != null && inv instanceof EnderChestInventory) {
                                 ButtonWidget button = ButtonWidget.builder(Text.literal("Export"), b -> exportEnderChest())
-                                                .dimensions(this.x + this.backgroundWidth - 60, this.y + 4, 56, 20)
+                                                .dimensions(0, 0, 56, 20)
                                                 .build();
                                 this.addDrawableChild(button);
                         }
