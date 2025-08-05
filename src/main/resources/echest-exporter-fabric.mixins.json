@@ -1,10 +1,11 @@
 {
-	"required": true,
-	"package": "dev.cypphi.eef.mixin",
-	"compatibilityLevel": "JAVA_21",
-	"mixins": [
-		"EnderChestScreenMixin"
-	],
+        "required": true,
+        "package": "dev.cypphi.eef.mixin",
+        "compatibilityLevel": "JAVA_21",
+        "refmap": "echest-exporter-fabric.refmap.json",
+        "mixins": [
+                "EnderChestScreenMixin"
+        ],
 	"injectors": {
 		"defaultRequire": 1
 	},
