@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 import dev.cypphi.eef.EchestExporterFabric;
 
@@ -41,7 +42,8 @@ public abstract class EnderChestScreenMixin extends HandledScreen<GenericContain
         super(handler, inventory, title);
     }
 
-    @Inject(method = "init", at = @At("TAIL"))
+    @SuppressWarnings("target")
+    @Inject(method = "init()V", at = @At("TAIL"))
     private void addExportButton(CallbackInfo ci) {
         Inventory inv = ((GenericContainerScreenHandler) this.handler).getInventory();
         MinecraftClient client = MinecraftClient.getInstance();
@@ -75,12 +77,13 @@ public abstract class EnderChestScreenMixin extends HandledScreen<GenericContain
         }
         JsonObject root = new JsonObject();
         root.add("items", items);
+        root.addProperty("username", client.getSession().getUsername());
 
         String home = System.getProperty("user.home");
         Path path = Paths.get(home, "Documents", "enderchest.json");
         try {
             Files.createDirectories(path.getParent());
-            try (BufferedWriter writer = Files.newBufferedWriter(path)) {
+            try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
                 gson.toJson(root, writer);
             }
