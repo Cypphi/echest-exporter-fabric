@@ -1,18 +1,14 @@
 {
 	"schemaVersion": 1,
-	"id": "echest-exporter-fabric",
+	"id": "eef",
 	"version": "${version}",
-	"name": "Echest Exporter Fabric",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "EChest Exporter Fabric",
+	"description": "Export ender chest content to JSON.",
 	"authors": [
-		"Me!"
+		"Cypphi"
 	],
-	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
-	},
 	"license": "CC0-1.0",
-	"icon": "assets/echest-exporter-fabric/icon.png",
+	"icon": "assets/eef/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"client": [
@@ -20,15 +16,12 @@
 		]
 	},
 	"mixins": [
-		"echest-exporter-fabric.mixins.json"
+		"eef.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.16.14",
 		"minecraft": "~1.21.8",
 		"java": ">=21",
 		"fabric-api": "*"
-	},
-	"suggests": {
-		"another-mod": "*"
 	}
 }
