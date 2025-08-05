@@ -6,6 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
@@ -32,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Map;
 
 import dev.cypphi.eef.EchestExporterFabric;
 
@@ -92,7 +94,7 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
                                                        compound.remove("count");
                                                        if (!compound.isEmpty()) {
                                                                JsonElement nbtJson = nbtOps.convertTo(jsonOps, compound);
-                                                               itemObj.add("nbt", nbtJson);
+                                                               itemObj.add("nbt", stripMinecraftNamespace(nbtJson));
                                                        }
                                                }
                                        });
@@ -116,9 +118,41 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
                                 Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
                                 gson.toJson(root, writer);
                         }
-                } catch (IOException e) {
-                        EchestExporterFabric.LOGGER.error("Failed to export ender chest", e);
-                }
+        } catch (IOException e) {
+                EchestExporterFabric.LOGGER.error("Failed to export ender chest", e);
         }
+    }
+
+       @Unique
+       private JsonElement stripMinecraftNamespace(JsonElement element) {
+               if (element == null || element.isJsonNull()) return element;
+               if (element.isJsonObject()) {
+                       JsonObject obj = element.getAsJsonObject();
+                       JsonObject stripped = new JsonObject();
+                       for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
+                               String key = entry.getKey();
+                               if (key.startsWith("minecraft:")) key = key.substring("minecraft:".length());
+                               stripped.add(key, stripMinecraftNamespace(entry.getValue()));
+                       }
+                       return stripped;
+               } else if (element.isJsonArray()) {
+                       JsonArray arr = element.getAsJsonArray();
+                       JsonArray stripped = new JsonArray();
+                       for (JsonElement e : arr) {
+                               stripped.add(stripMinecraftNamespace(e));
+                       }
+                       return stripped;
+               } else if (element.isJsonPrimitive()) {
+                       JsonPrimitive prim = element.getAsJsonPrimitive();
+                       if (prim.isString()) {
+                               String value = prim.getAsString();
+                               if (value.startsWith("minecraft:")) {
+                                       return new JsonPrimitive(value.substring("minecraft:".length()));
+                               }
+                       }
+                       return prim;
+               }
+               return element;
+       }
 
 }
