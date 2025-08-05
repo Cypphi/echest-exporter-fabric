@@ -2,13 +2,10 @@
 	"required": true,
 	"package": "dev.cypphi.eef.mixin",
 	"compatibilityLevel": "JAVA_21",
-	"mixins": [
-		"ExampleMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
-	},
-	"overwrites": {
-		"requireAnnotations": true
-	}
+        "mixins": [
+                "EnderChestScreenMixin"
+        ],
+        "injectors": {
+                "defaultRequire": 1
+        }
 }
